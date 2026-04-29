@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expense Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+<body class="p-5 bg-light">
+    <div class="container">
+        <h1 class="mb-4">💰 Expense Tracker</h1>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" action="{% url 'set_opening_balance' %}" class="row g-2 mb-4">
+            {% csrf_token %}
+            <div class="col-md-4">
+                <input type="number" step="0.01" min="0" name="amount" class="form-control" placeholder="Set opening balance" required>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-success w-100">Save Opening Balance</button>
+            </div>
+            <div class="col-md-5 d-flex align-items-center">
+                <small class="text-muted">Current opening balance: ${{ opening_balance }}</small>
+            </div>
+        </form>
+
+        <div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-bg-success">
+            <div class="card-body">
+                <h5>Total Income</h5>
+                <h3>${{ total_income }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-bg-danger">
+            <div class="card-body">
+                <h5>Total Expenses</h5>
+                <h3>${{ total }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-bg-primary">
+            <div class="card-body">
+                <h5>Balance</h5>
+                <h3>${{ balance }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        <h4>Total Spent: ${{ total }}</h4> <br><br>
+        <a href="{% url 'logout' %}" class="btn btn-danger mb-3">Logout</a>
+        <a href="{% url 'add_expense' %}" class="btn btn-primary mb-3">Add New Expense</a>
+        <a href="{% url 'export_csv' %}" class="btn btn-outline-primary mb-3">Download CSV</a>
+        <a href="{% url 'export_pdf' %}" class="btn btn-outline-danger mb-3">Download PDF</a>
+        <a href="{% url 'add_income' %}" class="btn btn-success mb-3">Add Income</a>
+
+        <h3 class="mt-4">📅 Monthly Expenses</h3>
+
+<table class="table table-bordered mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>Month</th>
+            <th>Total Spent</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in monthly_expenses %}
+        <tr>
+            <td>{{ m.month|date:"F Y" }}</td>
+            <td>${{ m.total }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2">No expenses yet</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+        <form method="GET" class="row mb-4">
+
+            <!-- Search -->
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" placeholder="Search title...">
+            </div>
+
+            <!-- Category Filter -->
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="All">All Categories</option>
+                    <option value="Food">Food</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Health">Health</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Bills">Bills</option>
+                    <option value="Home">Home</option>
+                    <option value="Personal">Personal</option>
+                </select>
+            </div>
+
+            <!-- Date From -->
+            <div class="col-md-2">
+                <input type="date" name="start_date" class="form-control">
+            </div>
+
+            <!-- Date To -->
+            <div class="col-md-2">
+                <input type="date" name="end_date" class="form-control">
+            </div>
+
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+
+        <!-- <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Spending by Category</h5>
+                <canvas id="pieChart"></canvas>
+            </div>
+
+            <div class="col-md-6">
+                <h5>Spending Comparison</h5>
+                <canvas id="barChart"></canvas>
+            </div>
+        </div> -->
+
+        <!-- <h4 class="mt-4">📅 Monthly Summary</h4> -->
+        <!-- <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Total Spent</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in monthly_summary %}
+                <tr>
+                    <td>{{ m.month|date:"F Y" }}</td>
+                    <td>${{ m.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if budget_exceeded %}
+    <div style="color: red; font-weight: bold;">
+        ⚠ Budget Exceeded! You are over by {{ over_budget_amount }}
+
+    </div>
+{% else %}
+    <div style="color: green; font-weight: bold;">
+        ✅ Remaining Budget: {{ remaining_budget }}
+    </div>
+{% endif %} -->
+
+
+        <!-- <canvas id="incomeExpenseChart" height="100"></canvas> -->
+
+        <!-- <script>
+            const income = Number("{{ total_income }}");
+            const expenses = Number("{{ total }}");
+
+            const ctx = document.getElementById("incomeExpenseChart").getContext("2d");
+
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: ["Income", "Expenses"],
+                    datasets: [{
+                        label: "Amount",
+                        data: [income, expenses],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        </script> -->
+
+        
+        <!-- <h3>Spending by Category</h3> -->
+<!-- <canvas id="categoryChart" height="120"></canvas> -->
+
+<script>
+    const categoryData = JSON.parse('{{ category_data|safe }}');
+
+    const labels = categoryData.map(item => item.category);
+    const totals = categoryData.map(item => item.total);
+
+    new Chart(document.getElementById("categoryChart"), {
+        type: "pie",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: totals
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+</script>
+
+
+
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Actions</th> <!-- ⭐ Added -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in expenses %}
+                <tr>
+                    <td>{{ exp.title }}</td>
+                    <td>${{ exp.amount }}</td>
+                    <td>{{ exp.category }}</td>
+                    <td>{{ exp.date }}</td>
+                    <td> <!-- ⭐ Added -->
+                        <a href="{% url 'edit_expense' exp.id %}" class="btn btn-sm btn-warning">Edit</a>
+                        
+                        <!-- Delete Trigger Button -->
+                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ exp.id }}">
+                            Delete
+                        </button>
+
+                    </td>
+                </tr>
+                <!-- Delete Confirmation Modal -->
+                    <div class="modal fade" id="deleteModal{{ exp.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">Confirm Delete</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            Are you sure you want to delete <strong>{{ exp.title }}</strong> ({{ exp.category }})?
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <a href="{% url 'delete_expense' exp.id %}" class="btn btn-danger">Yes, Delete</a>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    
+
+</body>
+</html>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
