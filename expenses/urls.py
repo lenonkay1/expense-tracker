@@ -12,7 +12,6 @@ urlpatterns = [
     path("export/csv/", views.export_csv, name="export_csv"),
     path("export/pdf/", views.export_pdf, name="export_pdf"),
     path("add-income/", views.add_income, name="add_income"),
-    path("set-opening-balance/", views.set_opening_balance, name="set_opening_balance"),
 
 
 ]

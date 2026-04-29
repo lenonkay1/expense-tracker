@@ -41,7 +41,6 @@ class Expense(models.Model):
         ("Snacks & Drinks", "Snacks & Drinks"),
         ("Transport", "Transport"),
         ("Entertainment", "Entertainment"),
-        ("Others", "Others"),
     ]
 
     # Dropdown options for Category

@@ -4,50 +4,109 @@
     <title>Expense Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 260px;
+            background-color: #111827; /* dark navy/black */
+            color: #ffffff;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1040;
+            padding: 1.5rem 1rem;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+        }
+
+        .sidebar .nav-link-custom {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            color: #e5e7eb;
+            font-size: 0.95rem;
+        }
+
+        .sidebar .nav-link-custom:hover {
+            background-color: #1f2937;
+            color: #ffffff;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+            margin-top: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .content-wrapper {
+            margin-left: 0;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        @media (min-width: 992px) {
+            .content-wrapper.sidebar-open {
+                margin-left: 260px;
+            }
+        }
+    </style>
 
 </head>
 <body class="bg-light">
-    <div class="d-flex">
-        <nav class="bg-dark text-white p-3" style="min-width: 240px; min-height: 100vh;">
-            <h4 class="mb-4">Menu</h4>
-            <div class="d-grid gap-2">
-                <a href="{% url 'dashboard' %}" class="btn btn-outline-light">Dashboard</a>
-                <a href="{% url 'add_expense' %}" class="btn btn-outline-light">Add Expense</a>
-                <a href="{% url 'add_income' %}" class="btn btn-outline-light">Add Income</a>
+    <!-- Left collapsible sidebar -->
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <span class="fw-semibold">Menu</span>
+            <button id="sidebarClose" class="btn btn-sm btn-outline-light">&times;</button>
+        </div>
 
-                <div class="mt-2">
-                    <div class="text-muted small mb-2">Download</div>
-                    <a href="{% url 'export_csv' %}" class="btn btn-light w-100 mb-2">CSV</a>
-                    <a href="{% url 'export_pdf' %}" class="btn btn-light w-100">PDF</a>
-                </div>
+        <div class="mb-3">
+            <a href="{% url 'dashboard' %}" class="nav-link-custom">Dashboard</a>
+            <a href="{% url 'add_expense' %}" class="nav-link-custom">Add Expense</a>
+            <a href="{% url 'add_income' %}" class="nav-link-custom">Add Income</a>
+        </div>
 
-                <a href="{% url 'logout' %}" class="btn btn-danger mt-3">Logout</a>
+        <div class="sidebar-section-title">Download</div>
+        <a href="{% url 'export_csv' %}" class="nav-link-custom">Export CSV</a>
+        <a href="{% url 'export_pdf' %}" class="nav-link-custom">Export PDF</a>
+
+        <div class="sidebar-section-title">Account</div>
+        <a href="{% url 'logout' %}" class="nav-link-custom text-danger">Logout</a>
+    </aside>
+
+    <!-- Top bar with menu button -->
+    <div id="contentWrapper" class="content-wrapper">
+        <nav class="navbar navbar-light bg-white shadow-sm">
+            <div class="container-fluid">
+                <button id="menuToggle" class="btn btn-outline-secondary">
+                    ☰
+                </button>
+                <span class="navbar-brand mb-0 h1 ms-2">💰 Expense Tracker</span>
             </div>
         </nav>
 
-        <div class="flex-grow-1 p-5">
-            <div class="container">
-                <h1 class="mb-4">💰 Expense Tracker</h1>
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        <form method="POST" action="{% url 'set_opening_balance' %}" class="row g-2 mb-4">
-            {% csrf_token %}
-            <div class="col-md-4">
-                <input type="number" step="0.01" min="0" name="amount" class="form-control" placeholder="Set opening balance" required>
-            </div>
-            <div class="col-md-3">
-                <button class="btn btn-success w-100">Save Opening Balance</button>
-            </div>
-            <div class="col-md-5 d-flex align-items-center">
-                <small class="text-muted">Current opening balance: ${{ opening_balance }}</small>
-            </div>
-        </form>
+        <div class="container py-4">
 
         <div class="row mb-4">
     <div class="col-md-4">
@@ -291,10 +350,38 @@
             </tbody>
         </table>
     </div>
-        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const sidebar = document.getElementById("sidebar");
+            const contentWrapper = document.getElementById("contentWrapper");
+            const menuToggle = document.getElementById("menuToggle");
+            const sidebarClose = document.getElementById("sidebarClose");
+
+            function openSidebar() {
+                sidebar.classList.add("open");
+                contentWrapper.classList.add("sidebar-open");
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove("open");
+                contentWrapper.classList.remove("sidebar-open");
+            }
+
+            menuToggle.addEventListener("click", function () {
+                if (sidebar.classList.contains("open")) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+
+            sidebarClose.addEventListener("click", function () {
+                closeSidebar();
+            });
+        });
+    </script>
 </body>
 </html>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-
