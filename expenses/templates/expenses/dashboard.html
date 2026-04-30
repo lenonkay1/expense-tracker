@@ -7,6 +7,17 @@
     <style>
         body {
             overflow-x: hidden;
+            background-color: #0f172a;
+            color: #e5e7eb;
+        }
+
+        .navbar {
+            background-color: #111827 !important;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .navbar .navbar-brand {
+            color: #f9fafb;
         }
 
         .sidebar {
@@ -65,6 +76,45 @@
             transition: margin-left 0.3s ease-in-out;
         }
 
+        .card {
+            border: 1px solid #1f2937;
+        }
+
+        .table {
+            --bs-table-bg: #111827;
+            --bs-table-color: #e5e7eb;
+            --bs-table-border-color: #374151;
+            --bs-table-striped-bg: #1f2937;
+            --bs-table-striped-color: #f3f4f6;
+            --bs-table-hover-bg: #243244;
+            --bs-table-hover-color: #ffffff;
+        }
+
+        .table-dark {
+            --bs-table-bg: #0b1220;
+            --bs-table-color: #f9fafb;
+            --bs-table-border-color: #334155;
+        }
+
+        .form-control,
+        .form-select {
+            background-color: #111827;
+            border-color: #374151;
+            color: #f9fafb;
+        }
+
+        .form-control::placeholder {
+            color: #9ca3af;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: #111827;
+            color: #ffffff;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25);
+        }
+
         @media (min-width: 992px) {
             .content-wrapper.sidebar-open {
                 margin-left: 260px;
@@ -73,7 +123,7 @@
     </style>
 
 </head>
-<body class="bg-light">
+<body>
     <!-- Left collapsible sidebar -->
     <aside id="sidebar" class="sidebar">
         <div class="sidebar-header">
@@ -97,7 +147,7 @@
 
     <!-- Top bar with menu button -->
     <div id="contentWrapper" class="content-wrapper">
-        <nav class="navbar navbar-light bg-white shadow-sm">
+        <nav class="navbar navbar-dark shadow-sm">
             <div class="container-fluid">
                 <button id="menuToggle" class="btn btn-outline-secondary">
                     ☰

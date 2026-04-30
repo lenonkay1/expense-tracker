@@ -27,14 +27,6 @@ from django.db.models.functions import TruncMonth
 
 
 @login_required(login_url='login')
-def dashboard(request):
-    expenses = Expense.objects.filter(user=request.user)  # Show only logged-in user's data
-    total = sum(exp.amount for exp in expenses)
-    context = {'expenses': expenses, 'total': total}
-    return render(request, 'expenses/dashboard.html', context)
-
-
-@login_required(login_url='login')
 def add_expense(request):
     if request.method == 'POST':
         title = request.POST['title']
@@ -46,6 +38,7 @@ def add_expense(request):
         return redirect('dashboard')
     return render(request, 'expenses/add_expense.html')
 
+@login_required(login_url='login')
 def export_csv(request):
     expenses = Expense.objects.filter(user=request.user)
 
@@ -60,6 +53,7 @@ def export_csv(request):
 
     return response
 
+@login_required(login_url='login')
 def export_pdf(request):
     expenses = Expense.objects.filter(user=request.user)
 
@@ -81,6 +75,7 @@ def export_pdf(request):
     p.save()
     return response
 
+@login_required(login_url='login')
 def edit_expense(request, expense_id):  # 👈 must match URL param
     expense = Expense.objects.get(id=expense_id)
 
@@ -94,6 +89,7 @@ def edit_expense(request, expense_id):  # 👈 must match URL param
     return render(request, "expenses/edit_expense.html", {"expense": expense})
 
 
+@login_required(login_url='login')
 def delete_expense(request, expense_id):
     # Get the record using the passed ID
     expense = Expense.objects.get(id=expense_id)
@@ -104,6 +100,7 @@ def delete_expense(request, expense_id):
     # Redirect back to dashboard
     return redirect('dashboard')
 
+@login_required(login_url='login')
 def add_income(request):
     if request.method == "POST":
         Income.objects.create(
@@ -167,11 +164,19 @@ from django.db.models import Sum
 from .models import Expense, Income
 
 
+@login_required(login_url='login')
 def dashboard(request):
     expenses = Expense.objects.filter(user=request.user)
+    incomes = Income.objects.filter(user=request.user)
 
     # Total spent (all time)
     total = expenses.aggregate(total=Sum('amount'))['total'] or 0
+
+    # Total income (all time) - includes "opening balance" and salary entries
+    total_income = incomes.aggregate(total=Sum('amount'))['total'] or 0
+
+    # Balance: what you have left
+    balance = total_income - total
 
     # Monthly budget
     budget = 300
@@ -190,6 +195,8 @@ def dashboard(request):
     context = {
         'expenses': expenses,
         'total': total,
+        'total_income': total_income,
+        'balance': balance,
         'budget': budget,
         'remaining_budget': remaining_budget,
         'budget_exceeded': budget_exceeded,
