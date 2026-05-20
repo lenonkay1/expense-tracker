@@ -1,35 +1,43 @@
-# from django.db import models
-# from django.contrib.auth.models import User
-
-# # The Expense model represents a single spending record.
-# class Expense(models.Model):
-#     # Link each expense to a user (foreign key relationship)
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    
-#     # A short description or title for the expense
-#     title = models.CharField(max_length=100)
-    
-#     # Amount spent (DecimalField is good for money)
-#     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    
-#     # Expense category (like Food, Transport, etc.)
-#     category = models.CharField(max_length=50)
-    
-#     # Automatically store the date when expense was created
-#     date = models.DateField(auto_now_add=True)
-
-#     def __str__(self):
-#         # This makes the admin panel show readable entries
-#         return f"{self.title} - ${self.amount}"
-
-
-
 from django.db import models
 from django.contrib.auth.models import User
 
-class Expense(models.Model):
 
-    # Dropdown options for Expense Title
+class UserProfile(models.Model):
+    CURRENCY_CHOICES = [
+        ("$", "USD ($)"),
+        ("R", "ZAR (R)"),
+        ("€", "EUR (€)"),
+        ("£", "GBP (£)"),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    monthly_budget = models.DecimalField(max_digits=12, decimal_places=2, default=300)
+    currency = models.CharField(max_length=5, choices=CURRENCY_CHOICES, default="$")
+    low_balance_threshold = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0, blank=True
+    )
+
+    def __str__(self):
+        return f"Profile({self.user.username})"
+
+
+class SavingsGoal(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="savings_goals")
+    name = models.CharField(max_length=100)
+    target_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    saved_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"{self.name} ({self.saved_amount}/{self.target_amount})"
+
+    @property
+    def progress_percent(self):
+        if self.target_amount <= 0:
+            return 0
+        return min(100, int((self.saved_amount / self.target_amount) * 100))
+
+
+class Expense(models.Model):
     TITLE_CHOICES = [
         ("Groceries", "Groceries"),
         ("Fuel", "Fuel"),
@@ -41,9 +49,9 @@ class Expense(models.Model):
         ("Snacks & Drinks", "Snacks & Drinks"),
         ("Transport", "Transport"),
         ("Entertainment", "Entertainment"),
+        ("Other", "Other"),
     ]
 
-    # Dropdown options for Category
     CATEGORY_CHOICES = [
         ("Home", "Home"),
         ("Food", "Food"),
@@ -57,7 +65,6 @@ class Expense(models.Model):
         ("Other", "Other"),
     ]
 
-    # Mapping to auto-assign categories
     AUTO_CATEGORY_MAP = {
         "Groceries": "Food",
         "Fuel": "Transport",
@@ -72,13 +79,15 @@ class Expense(models.Model):
     }
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100, choices=TITLE_CHOICES)  # 👈 dropdown added
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)  # 👈 dropdown added
+    title = models.CharField(max_length=100, choices=TITLE_CHOICES)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    notes = models.TextField(blank=True)
     date = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.title} - {self.amount}"
+
 
 class Income(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

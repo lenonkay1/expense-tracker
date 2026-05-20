@@ -1,9 +1,8 @@
 from django.contrib import admin
-from .models import Expense
 
-class ExpenseAdmin(admin.ModelAdmin):
-    list_display = ("title", "category", "amount", "user", "date")
-    list_filter = ("category", "title", "date")  # 👈 filters on sidebar
-    search_fields = ("title", "category")
+from .models import Expense, Income, SavingsGoal, UserProfile
 
-admin.site.register(Expense, ExpenseAdmin)
+admin.site.register(Expense)
+admin.site.register(Income)
+admin.site.register(UserProfile)
+admin.site.register(SavingsGoal)

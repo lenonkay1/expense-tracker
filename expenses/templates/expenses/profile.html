@@ -1,0 +1,107 @@
+{% extends "expenses/base_app.html" %}
+{% block title %}Profile & Settings{% endblock %}
+{% block content %}
+<h2 class="mb-4">Profile & Settings</h2>
+
+<form method="POST" class="mb-5">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="settings">
+    <h5>Preferences</h5>
+    <div class="mb-3">
+        <label class="form-label">Monthly Budget</label>
+        <input type="number" step="0.01" name="monthly_budget" class="form-control" value="{{ profile.monthly_budget }}" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Currency</label>
+        <select name="currency" class="form-select">
+            {% for code, label in currency_choices %}
+            <option value="{{ code }}" {% if profile.currency == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Low Balance Alert (0 = off)</label>
+        <input type="number" step="0.01" name="low_balance_threshold" class="form-control" value="{{ profile.low_balance_threshold }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Save Settings</button>
+</form>
+
+<hr class="border-secondary">
+
+<h5 class="mt-4">Change Password</h5>
+<form method="POST" class="mb-5">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="password">
+    <div class="mb-3">
+        <label class="form-label">Current Password</label>
+        <input type="password" name="current_password" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">New Password</label>
+        <input type="password" name="new_password" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Confirm New Password</label>
+        <input type="password" name="confirm_password" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-warning">Update Password</button>
+</form>
+
+<hr class="border-secondary">
+
+<h5 class="mt-4">Savings Goals</h5>
+{% for goal in goals %}
+<div class="mb-3 p-3 rounded" style="background:#0b1220;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>{{ goal.name }}</strong>
+        <span>{{ profile.currency }}{{ goal.saved_amount }} / {{ profile.currency }}{{ goal.target_amount }}</span>
+    </div>
+    <div class="progress mb-2" style="height: 8px;">
+        <div class="progress-bar bg-success" style="width: {{ goal.progress_percent }}%"></div>
+    </div>
+    <form method="POST" class="row g-2 align-items-end">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_goal">
+        <input type="hidden" name="goal_id" value="{{ goal.id }}">
+        <div class="col-md-8">
+            <label class="form-label small">Saved amount</label>
+            <input type="number" step="0.01" name="saved_amount" class="form-control" value="{{ goal.saved_amount }}">
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+            <button class="btn btn-sm btn-success">Update</button>
+        </div>
+    </form>
+    <form method="POST" class="mt-2">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete_goal">
+        <input type="hidden" name="goal_id" value="{{ goal.id }}">
+        <button class="btn btn-sm btn-outline-danger">Remove goal</button>
+    </form>
+</div>
+{% empty %}
+<p class="text-muted">No savings goals yet.</p>
+{% endfor %}
+
+<form method="POST" class="mt-3">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add_goal">
+    <div class="row g-2">
+        <div class="col-md-4">
+            <input type="text" name="goal_name" class="form-control" placeholder="Goal name" required>
+        </div>
+        <div class="col-md-3">
+            <input type="number" step="0.01" name="target_amount" class="form-control" placeholder="Target" required>
+        </div>
+        <div class="col-md-3">
+            <input type="number" step="0.01" name="saved_amount" class="form-control" placeholder="Saved so far" value="0">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100">Add</button>
+        </div>
+    </div>
+</form>
+
+<div class="mt-4">
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-light">Back to Dashboard</a>
+</div>
+{% endblock %}

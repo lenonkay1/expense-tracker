@@ -138,10 +138,11 @@
         </div>
 
         <div class="sidebar-section-title">Download</div>
-        <a href="{% url 'export_csv' %}" class="nav-link-custom">Export CSV</a>
-        <a href="{% url 'export_pdf' %}" class="nav-link-custom">Export PDF</a>
+        <a href="{% url 'export_csv' %}{% if export_query %}?{{ export_query }}{% endif %}" class="nav-link-custom">Export CSV</a>
+        <a href="{% url 'export_pdf' %}{% if export_query %}?{{ export_query }}{% endif %}" class="nav-link-custom">Export PDF</a>
 
         <div class="sidebar-section-title">Account</div>
+        <a href="{% url 'profile' %}" class="nav-link-custom">Profile & Settings</a>
         <a href="{% url 'logout' %}" class="nav-link-custom text-danger">Logout</a>
     </aside>
 
@@ -158,12 +159,31 @@
 
         <div class="container py-4">
 
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if low_balance_alert %}
+        <div class="alert alert-warning">Low balance alert: your balance is at or below {{ currency }}{{ low_balance_threshold }}.</div>
+        {% endif %}
+
+        {% if budget_exceeded %}
+        <div class="alert alert-danger">Budget exceeded by {{ currency }}{{ over_budget_amount }} (monthly budget: {{ currency }}{{ budget }}).</div>
+        {% else %}
+        <div class="alert alert-success">Remaining monthly budget: {{ currency }}{{ remaining_budget }}.</div>
+        {% endif %}
+
         <div class="row mb-4">
     <div class="col-md-4">
         <div class="card text-bg-success">
             <div class="card-body">
                 <h5>Total Income</h5>
-                <h3>${{ total_income }}</h3>
+                <h3>{{ currency }}{{ total_income }}</h3>
             </div>
         </div>
     </div>
@@ -172,7 +192,7 @@
         <div class="card text-bg-danger">
             <div class="card-body">
                 <h5>Total Expenses</h5>
-                <h3>${{ total }}</h3>
+                <h3>{{ currency }}{{ total }}</h3>
             </div>
         </div>
     </div>
@@ -181,14 +201,14 @@
         <div class="card text-bg-primary">
             <div class="card-body">
                 <h5>Balance</h5>
-                <h3>${{ balance }}</h3>
+                <h3>{{ currency }}{{ balance }}</h3>
             </div>
         </div>
     </div>
 </div>
 
 
-        <h4>Total Spent: ${{ total }}</h4> <br><br>
+        <h4>Filtered Total Spent: {{ currency }}{{ total }}</h4>
 
         <h3 class="mt-4">📅 Monthly Expenses</h3>
 
@@ -203,7 +223,7 @@
         {% for m in monthly_expenses %}
         <tr>
             <td>{{ m.month|date:"F Y" }}</td>
-            <td>${{ m.total }}</td>
+            <td>{{ currency }}{{ m.total }}</td>
         </tr>
         {% empty %}
         <tr>
@@ -218,7 +238,7 @@
 
             <!-- Search -->
             <div class="col-md-3">
-                <input type="text" name="search" class="form-control" placeholder="Search title...">
+                <input type="text" name="search" class="form-control" placeholder="Search title..." value="{{ filters.search }}">
             </div>
 
             <!-- Category Filter -->
@@ -235,20 +255,76 @@
                 </select>
             </div>
 
+            <div class="col-md-2">
+                <select name="period" class="form-select">
+                    <option value="all" {% if filters.period == "all" %}selected{% endif %}>All Time</option>
+                    <option value="this_month" {% if filters.period == "this_month" %}selected{% endif %}>This Month</option>
+                    <option value="last_month" {% if filters.period == "last_month" %}selected{% endif %}>Last Month</option>
+                </select>
+            </div>
+
             <!-- Date From -->
             <div class="col-md-2">
-                <input type="date" name="start_date" class="form-control">
+                <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
             </div>
 
             <!-- Date To -->
             <div class="col-md-2">
-                <input type="date" name="end_date" class="form-control">
+                <input type="date" name="end_date" class="form-control" value="{{ filters.end_date }}">
             </div>
 
             <div class="col-md-2">
                 <button class="btn btn-primary w-100">Filter</button>
             </div>
         </form>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Spending by Category</h5>
+                <canvas id="categoryChart" height="180"></canvas>
+            </div>
+            <div class="col-md-6">
+                <h5>Income vs Expenses</h5>
+                <canvas id="incomeExpenseChart" height="180"></canvas>
+            </div>
+        </div>
+
+        <h3 class="mt-2">Recent Income</h3>
+        <table class="table table-bordered mb-4">
+            <thead class="table-dark">
+                <tr><th>Source</th><th>Amount</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+                {% for inc in incomes %}
+                <tr>
+                    <td>{{ inc.source }}</td>
+                    <td>{{ currency }}{{ inc.amount }}</td>
+                    <td>{{ inc.date }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3">No income yet. Add salary or opening balance from the menu.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if savings_goals %}
+        <h3>Savings Goals</h3>
+        <div class="row mb-4">
+            {% for goal in savings_goals %}
+            <div class="col-md-4 mb-3">
+                <div class="card text-bg-dark">
+                    <div class="card-body">
+                        <h6>{{ goal.name }}</h6>
+                        <p class="mb-2">{{ currency }}{{ goal.saved_amount }} / {{ currency }}{{ goal.target_amount }}</p>
+                        <div class="progress" style="height:8px;">
+                            <div class="progress-bar bg-success" style="width: {{ goal.progress_percent }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
         <!-- <div class="row mb-4">
             <div class="col-md-6">
@@ -274,7 +350,7 @@
                 {% for m in monthly_summary %}
                 <tr>
                     <td>{{ m.month|date:"F Y" }}</td>
-                    <td>${{ m.total }}</td>
+                    <td>{{ currency }}{{ m.total }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -327,21 +403,27 @@
 
 <script>
     const categoryData = JSON.parse('{{ category_data|safe }}');
+    const incomeTotal = Number("{{ total_income }}");
+    const expenseTotal = Number("{{ total }}");
 
-    const labels = categoryData.map(item => item.category);
-    const totals = categoryData.map(item => item.total);
+    if (categoryData.length > 0) {
+        new Chart(document.getElementById("categoryChart"), {
+            type: "pie",
+            data: {
+                labels: categoryData.map(item => item.category),
+                datasets: [{ data: categoryData.map(item => item.total) }]
+            },
+            options: { responsive: true }
+        });
+    }
 
-    new Chart(document.getElementById("categoryChart"), {
-        type: "pie",
+    new Chart(document.getElementById("incomeExpenseChart"), {
+        type: "bar",
         data: {
-            labels: labels,
-            datasets: [{
-                data: totals
-            }]
+            labels: ["Income", "Expenses"],
+            datasets: [{ label: "Amount", data: [incomeTotal, expenseTotal], borderWidth: 1 }]
         },
-        options: {
-            responsive: true
-        }
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
     });
 </script>
 
@@ -362,7 +444,7 @@
                 {% for exp in expenses %}
                 <tr>
                     <td>{{ exp.title }}</td>
-                    <td>${{ exp.amount }}</td>
+                    <td>{{ currency }}{{ exp.amount }}</td>
                     <td>{{ exp.category }}</td>
                     <td>{{ exp.date }}</td>
                     <td> <!-- ⭐ Added -->
@@ -396,6 +478,8 @@
                     </div>
                     </div>
 
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No expenses match your filters. Add your first expense from the menu.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
